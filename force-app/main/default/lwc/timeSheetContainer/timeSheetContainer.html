@@ -1,0 +1,55 @@
+<template>
+    <lightning-card title="Timesheet" icon-name="standard:timesheet">
+        <div class="slds-p-around_medium">
+            
+            <!-- Month & Year Selection -->
+            <div class="slds-grid slds-grid_align-spread slds-m-bottom_medium">
+                <lightning-button icon-name="utility:back" label="Previous" onclick={handlePreviousMonth}></lightning-button>
+                <div class="slds-text-heading_medium">{monthName} {year}</div>
+                <lightning-button icon-name="utility:next" label="Next" onclick={handleNextMonth}></lightning-button>
+            </div>
+    
+            <!-- Timesheet Table -->
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer">
+                <thead>
+                    <tr>
+                        <th rowspan="2">Week</th>
+                        <th rowspan="2">Project</th>
+                        <template for:each={daysOfWeek} for:item="day">
+                            <th key={day}>{day}</th>
+                        </template>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={weeks} for:item="week">
+                        <template for:each={week.projects} for:item="project">
+                            <tr key={project.id}>
+                                <td if:true={project.isFirstRow} rowspan={week.projects.length}>Week {week.weekNumber}</td>
+                                <td>{project.name}</td>
+                                
+                                <template for:each={project.days} for:item="day">
+                                    <td key={day.date}>
+                                        <lightning-input 
+                                            type="number" 
+                                            value={day.hoursWorked} 
+                                            onchange={handleHoursChange} 
+                                            data-id={day.date} 
+                                            data-project={project.id}
+                                            step="0.5">
+                                        </lightning-input>
+                                    </td>
+                                    
+                                </template>                    
+                            </tr>
+                            
+                        </template>
+                    </template>
+                </tbody>
+            </table>
+    
+            <!-- Save Button -->
+            <lightning-button class="slds-m-top_medium" variant="brand" label="Save Timesheet" onclick={handleSaveTimesheet}></lightning-button>
+        </div>
+    </lightning-card>
+       
+</template>
