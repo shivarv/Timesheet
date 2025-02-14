@@ -1,18 +1,33 @@
 import { LightningElement,track } from 'lwc';
+import getInitDataApex from '@salesforce/apex/TimeSheetController.getInitData';
 
 export default class TimeSheetContainer extends LightningElement {
     @track currentDate = new Date();
     @track weeks = [];
+    monthName;
+    year;
     daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     projectOptions = [
-        { label: 'Project A', value: 'Project A' },
-        { label: 'Project B', value: 'Project B' },
-        { label: 'Project C', value: 'Project C' },
-        { label: 'Project D', value: 'Project D' }
     ];
 
     connectedCallback() {
-        this.loadWeeks();
+        getInitDataApex().then(result => {
+            console.log(result);
+            this.projectOptions  = [...this.getProjectList(result)];
+            this.loadWeeks();
+            this.monthName = this.currentDate.toLocaleString('default', { month: 'long' }); // "January", "February", etc.
+            this.year = this.currentDate.getFullYear();
+        }).catch(error => {
+            console.log(error);
+        });
+    }
+
+    getProjectList(result) {
+        let options = [];
+        for(let option of result.projectOptions) {
+            options.push({label: option.label, value: option.value});
+        }
+        return options;
     }
 
     loadWeeks() {
@@ -65,11 +80,13 @@ export default class TimeSheetContainer extends LightningElement {
 
     handlePreviousMonth() {
         this.currentDate.setMonth(this.currentDate.getMonth() - 1);
+        this.monthName = this.currentDate.toLocaleString('default', { month: 'long' }); // "January", "February", etc.
         this.loadWeeks();
     }
 
     handleNextMonth() {
         this.currentDate.setMonth(this.currentDate.getMonth() + 1);
+        this.monthName = this.currentDate.toLocaleString('default', { month: 'long' }); // "January", "February", etc.
         this.loadWeeks();
     }
 
