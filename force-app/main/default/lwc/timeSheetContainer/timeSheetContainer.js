@@ -53,29 +53,46 @@ export default class TimeSheetContainer extends LightningElement {
                         date: new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), currentWeekStart.getDate() + i).toISOString().split('T')[0],
                         hoursWorked: ''
                     })),
-                    isLastRow: projectIndex == this.projectOptions.length - 1, // Only the first project row should show the week number
+                    isLastRow: false, // Only the first project row should show the week number
                 }))
             };
+            week.projects.push( {
+                id: 'lastRow'+'-'+projects.length,
+                name: 'empty',
+                isFirstRow: false,
+                days: this.daysOfWeek.map((day, i) => ({
+                    date: new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), currentWeekStart.getDate() + i).toISOString().split('T')[0],
+                    hoursWorked: ''
+                })),
+                isLastRow: true, // 
+            });
             weeks.push(week);
             currentWeekStart.setDate(currentWeekStart.getDate() + 7);
         }
-
-        this.weeks = weeks;
+        this.weeks = [... weeks];
     }
 
     handleHoursChange(event) {
         let date = event.target.dataset.id;
         let projectId = event.target.dataset.project;
         let value = event.target.value;
+        let weekNumber = event.target.dataset.weekNumber;
+        let weekRef = this.weeks.find(ele => ele.weekNumber == weekNumber);
+        let projects = weekRef.projects;
 
-        this.weeks = this.weeks.map(week => ({
-            ...week,
-            projects: week.projects.map(project => 
-                project.id === projectId
-                    ? { ...project, days: project.days.map(day => day.date === date ? { ...day, hoursWorked: value } : day) }
-                    : project
-            )
-        }));
+        let totalHours = 0;
+        projects.find(project => project.id == projectId).days.find(ele => ele.date == date).hoursWorked = value;
+        
+        for(let project of projects) {
+            if(project.isLastRow != true ) {
+                let day = project.days.find(ele => ele.date == date);
+                totalHours += ( day.hoursWorked ?  Number(day.hoursWorked): 0) ;
+            }
+        }
+        projects[projects.length - 1].days.find(ele => ele.date == date).hoursWorked = totalHours;
+        // weekRef.projects[0].days.find(ele => ele.date == event.target.dataset.id
+
+        debugger;
     }
 
     handlePreviousMonth() {

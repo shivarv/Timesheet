@@ -28,7 +28,14 @@
                         <template for:each={week.projects} for:item="project">
                             <tr key={project.id}>
                                 <td if:true={project.isFirstRow} rowspan={week.projects.length}>Week {week.weekNumber}</td>
-                                <td>{project.name}</td>
+                                <template lwc:if={project.isLastRow}>
+                                    <td class="slds-p-around_none">
+                                        Total
+                                    </td>
+                                </template>
+                                <template lwc:else>
+                                    <td class="slds-p-around_none">{project.name}</td>
+                                </template>
                                 
                                 <template for:each={project.days} for:item="day">
                                     <td key={day.date}>
@@ -37,6 +44,7 @@
                                             value={day.hoursWorked} 
                                             onchange={handleHoursChange} 
                                             data-id={day.date} 
+                                            data-week-number={week.weekNumber}
                                             data-project={project.id}
                                             step="0.5">
                                         </lightning-input>
@@ -52,6 +60,10 @@
     
             <!-- Save Button -->
             <lightning-button class="slds-m-top_medium" variant="brand" label="Save Timesheet" onclick={handleSaveTimesheet}></lightning-button>
+            <lightning-combobox
+                        name="options"
+                        options={projectOptions}>
+                    </lightning-combobox>
         </div>
     </lightning-card>
        
