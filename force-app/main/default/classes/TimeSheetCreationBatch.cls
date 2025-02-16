@@ -66,13 +66,19 @@ global class TimeSheetCreationBatch implements Database.Batchable<SObject> {
     global void execute(Database.BatchableContext bc, List<SObject> scope) {
         Date firstDayOfMonth = Date.today().toStartOfMonth();
         Date lastDayOfMonth = firstDayOfMonth.addMonths(1).addDays(-1);
+        System.debug('execute firstDayOfMonth '+firstDayOfMonth);
+        System.debug('execute lastDayOfMonth '+lastDayOfMonth);
 
         // Extract User IDs
         Set<Id> userIds = getUserIdsFromPSA((List<PermissionSetAssignment>) scope);
+        System.debug(' userIds '+userIds);
+
         if (userIds.isEmpty()) {
             return;
         }
         Map<Id, TimeSheet__c> userTimesheetMap = getUserTimeSheetsMap(firstDayOfMonth);
+        System.debug(' userTimesheetMap '+ userTimesheetMap);
+
         List<TimeSheet__c> newTimeSheets = getNewTimeSheets(
                             userIds, userTimesheetMap, firstDayOfMonth, lastDayOfMonth);
         if (!newTimeSheets.isEmpty()) {
@@ -81,8 +87,11 @@ global class TimeSheetCreationBatch implements Database.Batchable<SObject> {
         for (TimeSheet__c ts : newTimeSheets) {
             userTimesheetMap.put(ts.User__c, ts);
         }
+        System.debug(' userTimesheetMap updated '+ userTimesheetMap);
+
         // Fetch Active Projects
         List<Project__c> projects = [SELECT Id, Name , project_code__c FROM Project__c];
+        System.debug(' projects '+ projects);
 
         // Create TimeSheetEntry Records
         List<TimeSheetEntry__c> timeSheetEntries = createTimeSheetEntries(
@@ -92,6 +101,8 @@ global class TimeSheetCreationBatch implements Database.Batchable<SObject> {
         if (!timeSheetEntries.isEmpty()) {
             insert timeSheetEntries;
         }
+        System.debug(' timeSheetEntries '+ timeSheetEntries);
+
     }
 
     global void finish(Database.BatchableContext bc) {

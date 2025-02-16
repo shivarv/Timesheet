@@ -11,9 +11,16 @@ export default class TimeSheetContainer extends LightningElement {
     ];
 
     connectedCallback() {
-        getInitDataApex().then(result => {
+        let inputDateString = this.currentDate.getFullYear() + '-' +
+                    String(this.currentDate.getMonth() + 1).padStart(2, '0') + '-' +
+                    String(this.currentDate.getDate()).padStart(2, '0');
+        getInitDataApex({inputDateString: inputDateString}).then(result => {
+            debugger;
             console.log(result);
             this.projectOptions  = [...this.getProjectList(result)];
+            
+            // Call Apex method with the formatted date
+            
             this.loadWeeks();
             this.monthName = this.currentDate.toLocaleString('default', { month: 'long' }); // "January", "February", etc.
             this.year = this.currentDate.getFullYear();
