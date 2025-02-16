@@ -42,16 +42,16 @@ global class TimeSheetCreationBatch implements Database.Batchable<SObject> {
     }
 
     private static List<TimeSheetEntry__c> createTimeSheetEntries(
-        List<Project__c> projects, Set<Id> userIds, Map<Id, TimeSheet__c> userTimesheetMap, Date firstDayOfMonth, Date lastDayOfMonth) {
+        Map<Id, List<Id>> userIdProjectIdsMap, Set<Id> userIds, Map<Id, TimeSheet__c> userTimesheetMap, Date firstDayOfMonth, Date lastDayOfMonth) {
         List<TimeSheetEntry__c> timeSheetEntries = new List<TimeSheetEntry__c>();
         for (Date currentDate = firstDayOfMonth; currentDate <= lastDayOfMonth; currentDate = currentDate.addDays(1)) {
             for (Id userId : userIds) {
                 if (userTimesheetMap.containsKey(userId)) {
-                    for (Project__c project : projects) {
+                    for (Id projectId : userIdProjectIdsMap.get(userId)) {
                         timeSheetEntries.add(new TimeSheetEntry__c(
                             TimeSheet__c = userTimesheetMap.get(userId).Id,
                             Date__c = currentDate,
-                            Project__c = project.Id,
+                            Project__c = projectId,
                             hours__c = 0 // Default value
                         ));
                     }
@@ -61,6 +61,18 @@ global class TimeSheetCreationBatch implements Database.Batchable<SObject> {
         return timeSheetEntries;
     }
    
+    private static Map<Id, List<Id>> getUserIdProjectIdsMap(List<User_Project__c> userProjects) {
+        Map<Id, List<Id>> userIdProjectIdsMap = new  Map<Id, List<Id>>();
+        for(User_Project__c userProject: userProjects) {
+            List<Id> projectIds = new List<Id>();
+            if(userIdProjectIdsMap.containsKey(userProject.user__c)) {
+                projectIds = userIdProjectIdsMap.get(userProject.user__c);
+            }
+            projectIds.add(userProject.project__c);
+        }
+        return userIdProjectIdsMap;
+    }
+
 
 
     global void execute(Database.BatchableContext bc, List<SObject> scope) {
@@ -88,14 +100,13 @@ global class TimeSheetCreationBatch implements Database.Batchable<SObject> {
             userTimesheetMap.put(ts.User__c, ts);
         }
         System.debug(' userTimesheetMap updated '+ userTimesheetMap);
-
-        // Fetch Active Projects
-        List<Project__c> projects = [SELECT Id, Name , project_code__c FROM Project__c];
-        System.debug(' projects '+ projects);
+        List<User_Project__c> userProjects = [select Id, Project__c, User__c from User_Project__c];
+        Map<Id, List<Id>> userIdProjectIdsMap = getUserIdProjectIdsMap(userProjects);
+        System.debug(' userProjects '+ userProjects);
 
         // Create TimeSheetEntry Records
         List<TimeSheetEntry__c> timeSheetEntries = createTimeSheetEntries(
-            projects, userIds, userTimesheetMap,  firstDayOfMonth, lastDayOfMonth
+            userIdProjectIdsMap, userIds, userTimesheetMap,  firstDayOfMonth, lastDayOfMonth
         );
 
         if (!timeSheetEntries.isEmpty()) {
@@ -104,6 +115,8 @@ global class TimeSheetCreationBatch implements Database.Batchable<SObject> {
         System.debug(' timeSheetEntries '+ timeSheetEntries);
 
     }
+
+
 
     global void finish(Database.BatchableContext bc) {
         System.debug('TimeSheet Batch Completed');

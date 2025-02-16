@@ -37,6 +37,7 @@ export default class TimeSheetContainer extends LightningElement {
         return options;
     }
 
+    /*
     loadWeeks() {
         let firstDayOfMonth = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
         let firstMonday = new Date(firstDayOfMonth);
@@ -78,6 +79,7 @@ export default class TimeSheetContainer extends LightningElement {
         }
         this.weeks = [... weeks];
     }
+    */
 
     handleHoursChange(event) {
         let date = event.target.dataset.id;
