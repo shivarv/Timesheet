@@ -38,10 +38,10 @@ public with sharing class TimeSheetController {
         Set<Id> projectIds = new Set<Id>();
         TimeSheetWrapper rec = new TimeSheetWrapper();
         List<OptionWrapper> projectOptions = new List<OptionWrapper>();
-        List<Project__c> projectRecords = getProjectsDetail();
-        for(Project__c projectRecord: projectRecords) {
-            projectIds.add(projectRecord.Id);
-            projectOptions.add(new OptionWrapper(projectRecord.project_code__c, projectRecord.Id));
+        List<User_Project__c> userProjectRecords = getProjectsDetail();
+        for(User_Project__c userProjectRecord: userProjectRecords) {
+            projectIds.add(userProjectRecord.Project__c);
+            projectOptions.add(new OptionWrapper(userProjectRecord.Project__r.project_code__c, userProjectRecord.Project__c));
         }
         rec.projectOptions = projectOptions;
         rec.timesheetId = [select id, User__c, Start_Date__c, End_Date__c from TimeSheet__c
@@ -78,7 +78,10 @@ public with sharing class TimeSheetController {
     }
 
     @AuraEnabled
-    public static List<Project__c> getProjectsDetail() {
-        return [select id, Name, project_code__c from Project__c];
+    public static List<User_Project__c> getProjectsDetail() {
+        List<User_Project__c> userProjects = [select Id, Project__c, Project__r.Name, Project__r.project_code__c, User__c 
+                        from User_Project__c where user__c = :UserInfo.getUserId()];
+        //need to return this
+        return userProjects;
     }
 }

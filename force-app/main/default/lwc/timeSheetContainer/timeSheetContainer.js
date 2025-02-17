@@ -15,15 +15,17 @@ export default class TimeSheetContainer extends LightningElement {
                     String(this.currentDate.getMonth() + 1).padStart(2, '0') + '-' +
                     String(this.currentDate.getDate()).padStart(2, '0');
         getInitDataApex({inputDateString: inputDateString}).then(result => {
-            debugger;
             console.log(result);
-            this.projectOptions  = [...this.getProjectList(result)];
-            
+            try{
+            this.setupData(result);            
             // Call Apex method with the formatted date
             
-            this.loadWeeks();
+            //this.loadWeeks();
             this.monthName = this.currentDate.toLocaleString('default', { month: 'long' }); // "January", "February", etc.
             this.year = this.currentDate.getFullYear();
+            } catch(e) {
+                debugger;
+            }
         }).catch(error => {
             console.log(error);
         });
@@ -37,7 +39,79 @@ export default class TimeSheetContainer extends LightningElement {
         return options;
     }
 
-    /*
+    getWeekOfDays(result, weekNumber, projectId) {
+        let data = result.projectDaysWrapper[projectId];
+        if (!data) {
+            return []; // Return empty array if projectId is not found
+        }
+        let startIndex = (weekNumber - 1) * 7;
+        let endIndex = Math.min(startIndex + 7, data.length); // Ensure we don't exceed list size
+    
+        return data.slice(startIndex, endIndex).map((item, index) => ({
+            date: item.dayRecordDate, // Example date generation
+            hoursWorked: item.hours,
+            isDisabled: item.isDisabled
+        }));
+    }
+
+    getTotalHoursRow(result, weekNumber, projectId) {
+        let output = [];
+        let startIndex = 0;
+        let endIndex = 7; // Ensure we don't exceed list size
+        for(let i = startIndex; i  < endIndex; i++){
+            output.push(
+                {
+                    date: 'tot' +result.projectDaysWrapper[projectId][i].dayRecordDate,
+                    hoursWorked: 0,
+                    isDisabled: false
+                }
+            );
+        }
+        return output;
+    }
+
+    getWeeksCountInMonth(year, month) {
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const firstDayOfWeek = firstDay.getDay(); 
+        const lastDate = lastDay.getDate(); 
+        return Math.ceil((firstDayOfWeek + lastDate) / 7);
+    }
+
+    setupData(result) {
+        debugger;
+        let firstDayOfMonth = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
+        this.projectOptions  = [...this.getProjectList(result)];
+        let weeks = [];
+        let projects = this.projectOptions;
+        let weeksInThisMonth = this.getWeeksCountInMonth(this.currentDate.getFullYear(), this.currentDate.getMonth());
+        // projectDaysWrapper:  a02C1000003bv7HIAQ :  Array(28) {dayRecordDate: '2025-02-01', hours: 0, isDisabled: true}
+        for(let i = 0; i < weeksInThisMonth; i++) {
+            let week = {
+                weekNumber: i + 1,
+                projects: projects.map((project, projectIndex) => ({
+                    id: `${project.value} week ${i + 1}`, // Unique ID,
+                    projectId: project.value,
+                    name: project.label,
+                    isFirstRow: projectIndex === 0, // Only the first project row should show the week number
+                    days: this.getWeekOfDays(result, i + 1, project.value),
+                    isLastRow: false, // Only the first project row should show the week number
+                }))
+            };
+            week.projects.push( {
+                id: 'lastRow'+'-week-'+ (i + 1)+ '-'+ projects.length,
+                projectId: 'totalProjectId',
+                name: 'empty',
+                isFirstRow: false,
+                days: this.getTotalHoursRow(result, i + 1, projects[0].value),
+                isLastRow: true // 
+            });
+            weeks.push(week);
+        }
+        this.weeks = [... weeks];
+
+    }
+    
     loadWeeks() {
         let firstDayOfMonth = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
         let firstMonday = new Date(firstDayOfMonth);
@@ -79,7 +153,7 @@ export default class TimeSheetContainer extends LightningElement {
         }
         this.weeks = [... weeks];
     }
-    */
+    
 
     handleHoursChange(event) {
         let date = event.target.dataset.id;
@@ -90,7 +164,8 @@ export default class TimeSheetContainer extends LightningElement {
         let projects = weekRef.projects;
 
         let totalHours = 0;
-        projects.find(project => project.id == projectId).days.find(ele => ele.date == date).hoursWorked = value;
+        projects.find(project => project.projectId
+            == projectId).days.find(ele => ele.date == date).hoursWorked = value;
         
         for(let project of projects) {
             if(project.isLastRow != true ) {
@@ -98,10 +173,9 @@ export default class TimeSheetContainer extends LightningElement {
                 totalHours += ( day.hoursWorked ?  Number(day.hoursWorked): 0) ;
             }
         }
-        projects[projects.length - 1].days.find(ele => ele.date == date).hoursWorked = totalHours;
+        projects[projects.length - 1].days.find(ele => ele.date == 'tot'+date).hoursWorked = totalHours;
         // weekRef.projects[0].days.find(ele => ele.date == event.target.dataset.id
 
-        debugger;
     }
 
     handlePreviousMonth() {
