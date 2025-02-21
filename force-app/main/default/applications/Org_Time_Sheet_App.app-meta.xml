@@ -10,12 +10,12 @@
     <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
     <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
     <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
-    <label>Time Sheet System</label>
+    <label>Org Time Sheet App</label>
     <navType>Standard</navType>
-    <tabs>TimeSheetEntry__c</tabs>
     <tabs>TimeSheet__c</tabs>
+    <tabs>TimeSheetEntry__c</tabs>
     <tabs>Timesheet_Approval__c</tabs>
-    <tabs>Project__c</tabs>
+    <tabs>Time_Sheet_Creation</tabs>
     <uiType>Lightning</uiType>
-    <utilityBar>Time_Sheet_System_UtilityBar</utilityBar>
+    <utilityBar>Org_Time_Sheet_App_UtilityBar</utilityBar>
 </CustomApplication>
