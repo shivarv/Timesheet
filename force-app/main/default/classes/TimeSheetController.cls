@@ -101,9 +101,9 @@ public with sharing class TimeSheetController {
                             AND End_Date__c >= :inputDate
                             LIMIT 1];
                             Date dt = Date.valueOf('2025-02-01');
-        List<TimeSheetEntry__c> test = [select id, TimeSheet__c from TimeSheetEntry__c  where date__c  = :dtString];
-        System.debug(test);
+        //List<TimeSheetEntry__c> test = [select id, TimeSheet__c from TimeSheetEntry__c  where date__c  = :dtString];
+        //System.debug(test);
 
-        System.debug(timeSheetRecord);
+        //System.debug(timeSheetRecord);
     }
 }
