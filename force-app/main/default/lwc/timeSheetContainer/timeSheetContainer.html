@@ -26,7 +26,7 @@
                 <tbody>
                     <template for:each={weeks} for:item="week">
                         <template for:each={week.projects} for:item="project">
-                            <tr key={project.id}>
+                            <tr key={project.uniqueId}>
                                 <td if:true={project.isFirstRow} rowspan={week.projects.length}>Week {week.weekNumber}</td>
                                 <template lwc:if={project.isLastRow}>
                                     <td class="slds-p-around_none">
@@ -38,12 +38,12 @@
                                 </template>
                                 
                                 <template for:each={project.days} for:item="day">
-                                    <td key={day.date}>
+                                    <td key={day.dayRecordDate}>
                                         <lightning-input 
                                             type="number" 
                                             value={day.hoursWorked} 
                                             onchange={handleHoursChange} 
-                                            data-id={day.date} 
+                                            data-unique-id={day.dayRecordDate} 
                                             data-week-number={week.weekNumber}
                                             data-project={project.projectId}
                                             step="0.5">

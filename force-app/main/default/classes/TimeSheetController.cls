@@ -1,4 +1,8 @@
 public with sharing class TimeSheetController {
+    public class TimeSheetFrontEndWrapper {
+        @AuraEnabled public String projectId;
+        @AuraEnabled public List<DayWrapper> data;
+    }
 
     public class OptionWrapper {
         @AuraEnabled public String label;
@@ -83,5 +87,23 @@ public with sharing class TimeSheetController {
                         from User_Project__c where user__c = :UserInfo.getUserId()];
         //need to return this
         return userProjects;
+    }
+
+    @AuraEnabled
+    public static void saveTimeSheet(String timeSheetData, String inputDateString) {
+        System.debug(timeSheetData);
+        Date inputDate = Date.valueOf(inputDateString);
+        List<TimeSheetFrontEndWrapper> wrapper = (List<TimeSheetFrontEndWrapper>) 
+                JSON.deserialize(timeSheetData, List<TimeSheetFrontEndWrapper>.class);
+        TimeSheet__c timeSheetRecord = [select id, User__c, Start_Date__c, End_Date__c from TimeSheet__c
+                            WHERE User__c = :UserInfo.getUserId()
+                            AND Start_Date__c <= :inputDate
+                            AND End_Date__c >= :inputDate
+                            LIMIT 1];
+                            Date dt = Date.valueOf('2025-02-01');
+        List<TimeSheetEntry__c> test = [select id, TimeSheet__c from TimeSheetEntry__c  where date__c  = :dtString];
+        System.debug(test);
+
+        System.debug(timeSheetRecord);
     }
 }

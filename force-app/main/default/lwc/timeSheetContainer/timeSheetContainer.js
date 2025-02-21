@@ -1,11 +1,15 @@
 import { LightningElement,track } from 'lwc';
 import getInitDataApex from '@salesforce/apex/TimeSheetController.getInitData';
+import saveTimeSheetApex from '@salesforce/apex/TimeSheetController.saveTimeSheet';
+
+
 
 export default class TimeSheetContainer extends LightningElement {
     @track currentDate = new Date();
     @track weeks = [];
     monthName;
     year;
+    projectIdsMap;
     daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     projectOptions = [
     ];
@@ -48,7 +52,7 @@ export default class TimeSheetContainer extends LightningElement {
         let endIndex = Math.min(startIndex + 7, data.length); // Ensure we don't exceed list size
     
         return data.slice(startIndex, endIndex).map((item, index) => ({
-            date: item.dayRecordDate, // Example date generation
+            dayRecordDate: item.dayRecordDate, // Example date generation
             hoursWorked: item.hours,
             isDisabled: item.isDisabled
         }));
@@ -59,9 +63,10 @@ export default class TimeSheetContainer extends LightningElement {
         let startIndex = 0;
         let endIndex = 7; // Ensure we don't exceed list size
         for(let i = startIndex; i  < endIndex; i++){
+            
             output.push(
                 {
-                    date: 'tot' +result.projectDaysWrapper[projectId][i].dayRecordDate,
+                    dayRecordDate: 'tot' +result.projectDaysWrapper[projectId][(weekNumber * 7) +i].dayRecordDate,
                     hoursWorked: 0,
                     isDisabled: false
                 }
@@ -78,10 +83,18 @@ export default class TimeSheetContainer extends LightningElement {
         return Math.ceil((firstDayOfWeek + lastDate) / 7);
     }
 
+    assignProjectIdsMap() {
+        let projectIdsMap = {};
+        for(let projectOption of this.projectOptions) {
+            projectIdsMap[projectOption.value] = projectOption.value;
+        }
+        return projectIdsMap;
+    }
+
     setupData(result) {
-        debugger;
         let firstDayOfMonth = new Date(this.currentDate.getFullYear(), this.currentDate.getMonth(), 1);
         this.projectOptions  = [...this.getProjectList(result)];
+        this.projectIdsMap = this.assignProjectIdsMap();
         let weeks = [];
         let projects = this.projectOptions;
         let weeksInThisMonth = this.getWeeksCountInMonth(this.currentDate.getFullYear(), this.currentDate.getMonth());
@@ -90,7 +103,7 @@ export default class TimeSheetContainer extends LightningElement {
             let week = {
                 weekNumber: i + 1,
                 projects: projects.map((project, projectIndex) => ({
-                    id: `${project.value} week ${i + 1}`, // Unique ID,
+                    uniqueId: `${project.value} week ${i + 1}`, // Unique uniqueId,
                     projectId: project.value,
                     name: project.label,
                     isFirstRow: projectIndex === 0, // Only the first project row should show the week number
@@ -99,11 +112,11 @@ export default class TimeSheetContainer extends LightningElement {
                 }))
             };
             week.projects.push( {
-                id: 'lastRow'+'-week-'+ (i + 1)+ '-'+ projects.length,
+                uniqueId: 'lastRow'+'-week-'+ (i + 1)+ '-'+ projects.length,
                 projectId: 'totalProjectId',
                 name: 'empty',
                 isFirstRow: false,
-                days: this.getTotalHoursRow(result, i + 1, projects[0].value),
+                days: this.getTotalHoursRow(result, i, projects[0].value),
                 isLastRow: true // 
             });
             weeks.push(week);
@@ -128,22 +141,22 @@ export default class TimeSheetContainer extends LightningElement {
             let week = {
                 weekNumber: weekNumber++,
                 projects: projects.map((projectName, projectIndex) => ({
-                    id: `${currentWeekStart.toISOString()}-${projectIndex}`, // Unique ID
+                    uniqueId: `${currentWeekStart.toISOString()}-${projectIndex}`, // Unique uniqueId
                     name: projectName.label,
                     isFirstRow: projectIndex === 0, // Only the first project row should show the week number
                     days: this.daysOfWeek.map((day, i) => ({
-                        date: new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), currentWeekStart.getDate() + i).toISOString().split('T')[0],
+                        dayRecordDate: new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), currentWeekStart.getDate() + i).toISOString().split('T')[0],
                         hoursWorked: ''
                     })),
                     isLastRow: false, // Only the first project row should show the week number
                 }))
             };
             week.projects.push( {
-                id: 'lastRow'+'-'+projects.length,
+                uniqueId: 'lastRow'+'-'+projects.length,
                 name: 'empty',
                 isFirstRow: false,
                 days: this.daysOfWeek.map((day, i) => ({
-                    date: new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), currentWeekStart.getDate() + i).toISOString().split('T')[0],
+                    dayRecordDate: new Date(currentWeekStart.getFullYear(), currentWeekStart.getMonth(), currentWeekStart.getDate() + i).toISOString().split('T')[0],
                     hoursWorked: ''
                 })),
                 isLastRow: true, // 
@@ -156,7 +169,7 @@ export default class TimeSheetContainer extends LightningElement {
     
 
     handleHoursChange(event) {
-        let date = event.target.dataset.id;
+        let dayRecordDate = event.target.dataset.uniqueId;
         let projectId = event.target.dataset.project;
         let value = event.target.value;
         let weekNumber = event.target.dataset.weekNumber;
@@ -165,16 +178,16 @@ export default class TimeSheetContainer extends LightningElement {
 
         let totalHours = 0;
         projects.find(project => project.projectId
-            == projectId).days.find(ele => ele.date == date).hoursWorked = value;
+            == projectId).days.find(ele => ele.dayRecordDate == dayRecordDate).hoursWorked = value;
         
         for(let project of projects) {
             if(project.isLastRow != true ) {
-                let day = project.days.find(ele => ele.date == date);
+                let day = project.days.find(ele => ele.dayRecordDate == dayRecordDate);
                 totalHours += ( day.hoursWorked ?  Number(day.hoursWorked): 0) ;
             }
         }
-        projects[projects.length - 1].days.find(ele => ele.date == 'tot'+date).hoursWorked = totalHours;
-        // weekRef.projects[0].days.find(ele => ele.date == event.target.dataset.id
+        projects[projects.length - 1].days.find(ele => ele.dayRecordDate == 'tot'+dayRecordDate).hoursWorked = totalHours;
+        // weekRef.projects[0].days.find(ele => ele.date == event.target.dataset.uniqueId
 
     }
 
@@ -195,6 +208,33 @@ export default class TimeSheetContainer extends LightningElement {
     }
 
     handleSaveTimesheet() {
-        console.log('Saving timesheet data:', JSON.stringify(this.weeks, null, 2));
+        try {
+
+            let copiedOriginalData = JSON.parse(JSON.stringify(this.weeks));
+            let currentDate = this.currentDate.getFullYear() + '-' +
+            String(this.currentDate.getMonth() + 1).padStart(2, '0') + '-' +
+            String(this.currentDate.getDate()).padStart(2, '0');
+            let projectMap = {}; 
+            let transformedData;
+            copiedOriginalData.forEach(week => {
+                week.projects.forEach(project => {
+                    if (this.projectIdsMap[project.projectId]) {
+                        if (!projectMap[project.projectId]) {
+                            projectMap[project.projectId] = [...project.days];
+                        } else {
+                            projectMap[project.projectId] = [...projectMap[project.projectId].concat([...project.days] )];
+                        }
+                    }
+                });
+            });
+            transformedData = Object.keys(projectMap).map(projectId => ({
+                projectId: projectId,
+                data: projectMap[projectId]
+            }));        
+            saveTimeSheetApex({timeSheetData: JSON.stringify(transformedData), inputDateString: currentDate}).then(result => {
+            });
+        } catch(e) {
+            debugger;
+        }
     }
 }

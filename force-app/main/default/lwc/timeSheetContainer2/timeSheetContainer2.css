@@ -1,0 +1,74 @@
+/* Split Container */
+.split-container {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+}
+
+/* Right Pane (100%) */
+.right-pane {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+/* Calendar Container */
+.calendar-container {
+    width: 100%;
+}
+
+/* Week Row */
+.week-row {
+    display: grid;
+    grid-template-columns: 1.5fr 1.5fr repeat(7, 1fr); /* Timesheet Columns + Monday-Sunday */
+    gap: 5px;
+    text-align: center;
+    align-items: center;
+}
+
+/* Weekday Headers */
+.week-header {
+    font-weight: bold;
+    text-align: center;
+    padding: 12px;
+    background: #f3f3f3;
+    border: 1px solid #ccc;
+}
+
+/* Timesheet Header */
+.timesheet-header {
+    font-weight: bold;
+    text-align: center;
+    padding: 12px;
+    background: #d1ecf1;
+    border: 1px solid #17a2b8;
+    width: 100%;
+}
+
+/* Timesheet Cell */
+.timesheet-cell {
+    font-weight: bold;
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    width: 100%;
+}
+
+/* Calendar Cells (Dates) */
+.day-cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+    border: 1px solid #ddd;
+    height: 40px;
+}
+
+/* Ensure input fields align properly */
+.date-box {
+    width: 100%;
+    text-align: center;
+    padding: 5px 0;
+    font-size: 14px;
+}

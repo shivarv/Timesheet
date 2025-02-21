@@ -1,0 +1,32 @@
+<template>
+    <div class="split-container">
+        <!-- Right Pane (100%) -->
+        <div class="right-pane">
+            <div class="calendar-container">
+                <!-- Weekday Headers (Timesheet1 + Timesheet2 + Monday-Sunday) -->
+                <div class="week-row header-row">
+                    <div class="timesheet-header">Timesheet 1</div> <!-- First Timesheet Column -->
+                    <div class="timesheet-header">Timesheet 2</div> <!-- Second Timesheet Column -->
+                    <template for:each={weekDays} for:item="day">
+                        <div key={day} class="week-header">{day}</div>
+                    </template>
+                </div>
+
+                <!-- Calendar Grid (Timesheet1 + Timesheet2 + Dates) -->
+                <template for:each={weeks} for:item="week">
+                    <div key={week} class="week-row">
+                        <div class="timesheet-cell">Work Hours</div> <!-- First Timesheet Column -->
+                        <div class="timesheet-cell">Task Info</div> <!-- Second Timesheet Column -->
+                        <template for:each={week} for:item="date">
+                            <div key={date} class="day-cell">
+                                <template if:true={date}>
+                                    <lightning-input type="text" value={date} class="date-box" readonly></lightning-input>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+</template>
